@@ -2,7 +2,7 @@ name: Auto Quotex Signal Generator
 
 on:
   schedule:
-    - cron: "*/1 * * * *"   # runs every 1 minute
+    - cron: "*/1 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -20,7 +20,17 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install yfinance pandas
 
-      - name: Run signal gene
+      - name: Run signal generator
+        run: |
+          python generate_signal.py
 
+      - name: Commit and push signal.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add signal.json
+          git commit -m "Auto update signal" || echo "No changes"
+          git push
