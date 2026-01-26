@@ -56,7 +56,22 @@
         const table = document.getElementById("signalTable");
         table.innerHTML = "";
 
-        data.signals.forEach(s => {
+        const signals = data.signals ? data.signals : [data];
+
+signals.forEach(s => {
+  table.innerHTML += `
+    <tr>
+      <td>${s.time ?? "-"}</td>
+      <td>${s.market ?? "FOREX"}</td>
+      <td>${s.pair ?? "-"}</td>
+      <td>${s.signal ?? "-"}</td>
+      <td>${s.confidence ?? "-"}</td>
+      <td>${s.wins ?? "-"}</td>
+      <td>${s.losses ?? "-"}</td>
+    </tr>
+  `;
+});
+
           table.innerHTML += `
             <tr>
               <td>${s.time}</td>
