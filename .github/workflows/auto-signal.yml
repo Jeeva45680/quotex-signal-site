@@ -1,1 +1,26 @@
+name: Auto Quotex Signal Generator
+
+on:
+  schedule:
+    - cron: "*/1 * * * *"   # runs every 1 minute
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas
+
+      - name: Run signal gene
 
