@@ -1,75 +1,99 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Quotex Signal Dashboard</title>
-  <meta charset="UTF-8">
-  <style>
-    body {
-      background:#020617;
-      color:white;
-      font-family:Arial;
-      text-align:center;
-    }
-    table {
-      width:100%;
-      max-width:900px;
-      margin:auto;
-      border-collapse:collapse;
-    }
-    th,td {
-      padding:8px;
-      border-bottom:1px solid #334155;
-    }
-    .CALL {color:#22c55e;font-weight:bold;}
-    .PUT {color:#ef4444;font-weight:bold;}
-    .NO {color:#eab308;}
-  </style>
-</head>
-<body>
+import yfinance as yf
+import pandas as pd
+import json
+from datetime import datetime
+import os
 
-<h2>📊 Quotex Signal Dashboard</h2>
-
-<table>
-  <tr>
-    <th>TIME</th>
-    <th>PAIR</th>
-    <th>EMA</th>
-    <th>RSI</th>
-    <th>MACD</th>
-    <th>ADX</th>
-    <th>CANDLE</th>
-    <th>SIGNAL</th>
-  </tr>
-  <tbody id="rows"></tbody>
-</table>
-
-<script>
-async function load() {
-  const res = await fetch("signal.json?" + Date.now());
-  const data = await res.json();
-  const rows = document.getElementById("rows");
-  rows.innerHTML = "";
-
-  data.signals.forEach(s => {
-    rows.innerHTML += `
-      <tr>
-        <td>${s.time}</td>
-        <td>${s.pair}</td>
-        <td>${s.ema}</td>
-        <td>${s.rsi}</td>
-        <td>${s.macd}</td>
-        <td>${s.adx}</td>
-        <td>${s.candle}</td>
-        <td class="${s.signal}">${s.signal}</td>
-      </tr>`;
-  });
+# =====================
+# SETTINGS
+# =====================
+ASSETS = {
+    "FOREX": {"EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD"},
+    "CRYPTO": {"BTC-USD": "BTC/USD", "ETH-USD": "ETH/USD"},
+    "STOCKS": {"AAPL": "AAPL", "TSLA": "TSLA"},
+    "COMMODITIES": {"GC=F": "GOLD", "SI=F": "SILVER"},
+    "OTC": {"EUR/USD OTC": "EUR/USD OTC"}  # simulated
 }
 
-load();
-setInterval(load, 60000);
-</script>
+HISTORY_FILE = "history.json"
+SIGNAL_FILE = "signal.json"
 
-</body>
-</html>
+# =====================
+# INDICATORS
+# =====================
+def ema(s, p): return s.ewm(span=p, adjust=False).mean()
 
+def rsi(s, p=14):
+    d = s.diff()
+    g = d.clip(lower=0)
+    l = -d.clip(upper=0)
+    rs = g.ewm(com=p-1, adjust=False).mean() / l.ewm(com=p-1, adjust=False).mean()
+    return 100 - (100 / (1 + rs))
 
+# =====================
+# LOAD HISTORY
+# =====================
+if os.path.exists(HISTORY_FILE):
+    history = json.load(open(HISTORY_FILE))
+else:
+    history = {}
+
+signals = []
+now = datetime.now().strftime("%H:%M")
+
+# =====================
+# MAIN LOOP (1 signal / min)
+# =====================
+for market, items in ASSETS.items():
+    for symbol, name in items.items():
+
+        if market != "OTC":
+            df = yf.download(symbol, interval="1m", period="1d", progress=False)
+            if len(df) < 20:
+                continue
+            close = df["Close"]
+        else:
+            # OTC simulated candles (strict filtering)
+            close = pd.Series([100,101,102,101,100,99,100,101,102,101,100,99,100])
+
+        df = pd.DataFrame({"close": close})
+        df["EMA5"] = ema(df["close"], 5)
+        df["EMA10"] = ema(df["close"], 10)
+        df["RSI"] = rsi(df["close"])
+
+        last = df.iloc[-1]
+        prev = df.iloc[-2]
+
+        candle_green = last["close"] > prev["close"]
+        candle_red = last["close"] < prev["close"]
+
+        signal = "NO TRADE"
+        confidence = 0
+
+        if last["EMA5"] > last["EMA10"] and 40 <= last["RSI"] <= 65 and candle_green:
+            signal = "CALL"
+            confidence = 68
+        elif last["EMA5"] < last["EMA10"] and 35 <= last["RSI"] <= 60 and candle_red:
+            signal = "PUT"
+            confidence = 66
+
+        # history init
+        history.setdefault(name, {"wins": 0, "losses": 0})
+
+        signals.append({
+            "time": now,
+            "market": market,
+            "pair": name,
+            "signal": signal,
+            "confidence": confidence,
+            "wins": history[name]["wins"],
+            "losses": history[name]["losses"]
+        })
+
+# =====================
+# SAVE FILES
+# =====================
+json.dump({"signals": signals}, open(SIGNAL_FILE, "w"), indent=2)
+json.dump(history, open(HISTORY_FILE, "w"), indent=2)
+
+print("1-minute signals updated")
