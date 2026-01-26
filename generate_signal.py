@@ -3,91 +3,61 @@ import pandas as pd
 import json
 from datetime import datetime
 
-# ======================
-# SETTINGS
-# ======================
-SYMBOL = "EURUSD=X"   # change later if needed
-
-# ======================
-# INDICATORS
-# ======================
-def ema(series, period):
-    return series.ewm(span=period, adjust=False).mean()
-
-def rsi(series, period=14):
-    delta = series.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(com=period-1, adjust=False).mean()
-    avg_loss = loss.ewm(com=period-1, adjust=False).mean()
-    rs = avg_gain / avg_loss
-    return 100 - (100 / (1 + rs))
-
-# ======================
-# FETCH DATA (1 MIN)
-# ======================
-df = yf.download(SYMBOL, interval="1m", period="1d", progress=False)
-
-if len(df) < 20:
-    print("Not enough data")
-    exit()
-
-close = df["Close"].astype(float)
-
-# ======================
-# CALCULATE VALUES (SINGLE NUMBERS ONLY)
-# ======================
-ema5 = float(ema(close, 5).iloc[-1])
-ema10 = float(ema(close, 10).iloc[-1])
-rsi_val = float(rsi(close).iloc[-1])
-
-last = float(close.iloc[-1])
-prev = float(close.iloc[-2])
-
-# ======================
-# SIGNAL LOGIC
-# ======================
-signal = "NO TRADE"
-
-if ema5 > ema10 and 40 <= rsi_val <= 65 and last > prev:
-    signal = "CALL"
-elif ema5 < ema10 and 35 <= rsi_val <= 60 and last < prev:
-    signal = "PUT"
-
-# ======================
-# OUTPUT
-# ======================
-now = datetime.now().strftime("%H:%M")
-
-data = {
-    "time": now,
-    "pair": "EUR/USD",
-    "ema5": ema5,
-    "ema10": ema10,
-    "rsi": rsi_val,
-    "signal": signal
+ASSETS = {
+    "FOREX": {"EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD"},
+    "CRYPTO": {"BTC-USD": "BTC/USD"},
+    "COMMODITY": {"GC=F": "GOLD"}
 }
 
-with open("signal.json", "w") as f:
-    json.dump(data, f, indent=2)
+def ema(s, p):
+    return s.ewm(span=p, adjust=False).mean()
 
-print("✅ Signal generated:", signal)
+def rsi(s, p=14):
+    d = s.diff()
+    g = d.clip(lower=0)
+    l = -d.clip(upper=0)
+    rs = g.ewm(com=p-1, adjust=False).mean() / l.ewm(com=p-1, adjust=False).mean()
+    return 100 - (100 / (1 + rs))
 
-import json
+signals = []
 
-output = {
-    "signals": [
-        {
-            "time": now,
+now = datetime.now()
+date = now.strftime("%d/%m/%Y")
+time = now.strftime("%H:%M")
+
+for market, items in ASSETS.items():
+    for symbol, name in items.items():
+        df = yf.download(symbol, interval="1m", period="1d", progress=False)
+        if len(df) < 20:
+            continue
+
+        close = df["Close"]
+        ema5 = ema(close, 5).iloc[-1]
+        ema10 = ema(close, 10).iloc[-1]
+        rsi_val = rsi(close).iloc[-1]
+
+        signal = "NO TRADE"
+        confidence = 0
+
+        if ema5 > ema10 and 45 <= rsi_val <= 65:
+            signal = "CALL"
+            confidence = 70
+        elif ema5 < ema10 and 35 <= rsi_val <= 55:
+            signal = "PUT"
+            confidence = 68
+
+        signals.append({
+            "date": date,
+            "time": time,
             "market": market,
             "pair": name,
             "signal": signal,
             "confidence": confidence,
-            "wins": history[name]["wins"],
-            "losses": history[name]["losses"]
-        }
-    ]
-}
+            "wins": 0,
+            "losses": 0
+        })
 
 with open("signal.json", "w") as f:
-    json.dump(output, f, indent=2)
+    json.dump({"signals": signals}, f, indent=2)
+
+print("Signals generated")
