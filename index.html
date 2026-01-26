@@ -8,7 +8,7 @@
       background: #020617;
       color: white;
       font-family: Arial, sans-serif;
-      padding: 15px;
+      padding: 20px;
     }
     h2 {
       text-align: center;
@@ -16,75 +16,66 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 20px;
     }
     th, td {
-      padding: 10px;
       border-bottom: 1px solid #334155;
+      padding: 10px;
       text-align: center;
     }
     th {
-      background: #020617;
+      color: #38bdf8;
     }
-    .CALL { color: #22c55e; font-weight: bold; }
-    .PUT { color: #ef4444; font-weight: bold; }
-    .NO { color: #eab308; font-weight: bold; }
   </style>
 </head>
+
 <body>
+  <h2>📊 Quotex Signal Dashboard</h2>
 
-<h2>📊 Quotex Signal Dashboard</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>TIME</th>
+        <th>MARKET</th>
+        <th>PAIR</th>
+        <th>SIGNAL</th>
+        <th>CONFIDENCE</th>
+        <th>WINS</th>
+        <th>LOSSES</th>
+      </tr>
+    </thead>
+    <tbody id="signalTable"></tbody>
+  </table>
 
-<table>
-  <thead>
-    <tr>
-      <th>TIME</th>
-      <th>MARKET</th>
-      <th>PAIR</th>
-      <th>SIGNAL</th>
-      <th>CONFIDENCE</th>
-      <th>WINS</th>
-      <th>LOSSES</th>
-    </tr>
-  </thead>
-  <tbody id="rows">
-    <tr><td colspan="7">Loading signals...</td></tr>
-  </tbody>
-</table>
+  <script>
+    async function loadSignals() {
+      try {
+        const response = await fetch("signal.json?ts=" + Date.now());
+        const data = await response.json();
 
-<script>
-async function loadSignals() {
-  try {
-    const res = await fetch("signal.json?" + Date.now());
-    const data = await res.json();
+        const table = document.getElementById("signalTable");
+        table.innerHTML = "";
 
-    const rows = document.getElementById("rows");
-    rows.innerHTML = "";
+        data.signals.forEach(s => {
+          table.innerHTML += `
+            <tr>
+              <td>${s.time}</td>
+              <td>${s.market}</td>
+              <td>${s.pair}</td>
+              <td>${s.signal}</td>
+              <td>${s.confidence}%</td>
+              <td>${s.wins}</td>
+              <td>${s.losses}</td>
+            </tr>
+          `;
+        });
+      } catch (e) {
+        console.error("Failed to load signal.json", e);
+      }
+    }
 
-    data.signals.forEach(s => {
-      rows.innerHTML += `
-        <tr>
-          <td>${s.time}</td>
-          <td>${s.market}</td>
-          <td>${s.pair}</td>
-          <td class="${s.signal.startsWith('NO') ? 'NO' : s.signal}">
-            ${s.signal}
-          </td>
-          <td>${s.confidence ? s.confidence + "%" : "--"}</td>
-          <td>${s.wins}</td>
-          <td>${s.losses}</td>
-        </tr>`;
-    });
-
-  } catch (e) {
-    document.getElementById("rows").innerHTML =
-      "<tr><td colspan='7'>Failed to load signal.json</td></tr>";
-  }
-}
-
-loadSignals();
-setInterval(loadSignals, 60000); // auto refresh every 1 min
-</script>
-
+    loadSignals();              // load immediately
+    setInterval(loadSignals, 60000); // refresh every 1 minute
+  </script>
 </body>
 </html>
