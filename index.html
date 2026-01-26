@@ -9,45 +9,65 @@
       color: white;
       font-family: Arial;
       text-align: center;
-      padding-top: 50px;
+      padding-top: 40px;
     }
     .box {
       background: #0f172a;
-      width: 320px;
+      width: 330px;
       margin: auto;
-      padding: 30px;
+      padding: 25px;
       border-radius: 12px;
     }
-    .call { color: #22c55e; font-size: 30px; }
-    .put { color: #ef4444; font-size: 30px; }
+    select, button {
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    .call { color: #22c55e; font-size: 28px; }
+    .put { color: #ef4444; font-size: 28px; }
     .wait { color: #eab308; font-size: 22px; }
   </style>
 </head>
 <body>
 
-<h1>📊 Quotex Signal</h1>
+<h1>📊 Quotex Signals</h1>
 
 <div class="box">
-  <p id="signal" class="wait">WAITING FOR SIGNAL...</p>
-</div>
 
-<br>
-<button onclick="updateSignal()">Refresh</button>
+  <p><b>Select Pair</b></p>
+  <select id="pair">
+    <option>EUR/USD</option>
+    <option>GBP/USD</option>
+    <option>USD/JPY</option>
+    <option>AUD/USD</option>
+    <option>USD/CHF</option>
+    <option>EUR/JPY</option>
+  </select>
+
+  <br><br>
+
+  <p id="signal" class="wait">WAITING...</p>
+
+  <button onclick="updateSignal()">Get Signal</button>
+
+</div>
 
 <script>
 function updateSignal() {
+  const pair = document.getElementById("pair").value;
   const signals = ["CALL", "PUT", "NO TRADE"];
   const pick = signals[Math.floor(Math.random() * signals.length)];
+
   const el = document.getElementById("signal");
 
   if (pick === "CALL") {
-    el.innerText = "🟢 CALL";
+    el.innerText = "🟢 " + pair + " → CALL";
     el.className = "call";
   } else if (pick === "PUT") {
-    el.innerText = "🔴 PUT";
+    el.innerText = "🔴 " + pair + " → PUT";
     el.className = "put";
   } else {
-    el.innerText = "⏸ NO TRADE";
+    el.innerText = pair + " → NO TRADE";
     el.className = "wait";
   }
 }
@@ -55,3 +75,4 @@ function updateSignal() {
 
 </body>
 </html>
+
