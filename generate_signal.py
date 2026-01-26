@@ -72,3 +72,22 @@ with open("signal.json", "w") as f:
     json.dump(data, f, indent=2)
 
 print("✅ Signal generated:", signal)
+
+import json
+
+output = {
+    "signals": [
+        {
+            "time": now,
+            "market": market,
+            "pair": name,
+            "signal": signal,
+            "confidence": confidence,
+            "wins": history[name]["wins"],
+            "losses": history[name]["losses"]
+        }
+    ]
+}
+
+with open("signal.json", "w") as f:
+    json.dump(output, f, indent=2)
