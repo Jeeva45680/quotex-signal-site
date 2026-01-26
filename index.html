@@ -5,74 +5,71 @@
   <meta charset="UTF-8">
   <style>
     body {
-      background: #020617;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      padding-top: 40px;
+      background:#020617;
+      color:white;
+      font-family:Arial;
+      text-align:center;
     }
-    .box {
-      background: #0f172a;
-      width: 330px;
-      margin: auto;
-      padding: 25px;
-      border-radius: 12px;
+    table {
+      width:100%;
+      max-width:900px;
+      margin:auto;
+      border-collapse:collapse;
     }
-    select, button {
-      padding: 8px;
-      font-size: 16px;
-      margin-top: 10px;
+    th,td {
+      padding:8px;
+      border-bottom:1px solid #334155;
     }
-    .call { color: #22c55e; font-size: 28px; }
-    .put { color: #ef4444; font-size: 28px; }
-    .wait { color: #eab308; font-size: 22px; }
+    .CALL {color:#22c55e;font-weight:bold;}
+    .PUT {color:#ef4444;font-weight:bold;}
+    .NO {color:#eab308;}
   </style>
 </head>
 <body>
 
-<h1>📊 Quotex Signals</h1>
+<h2>📊 Quotex Signal Dashboard</h2>
 
-<div class="box">
-
-  <p><b>Select Pair</b></p>
-  <select id="pair">
-    <option>EUR/USD</option>
-    <option>GBP/USD</option>
-    <option>USD/JPY</option>
-    <option>AUD/USD</option>
-    <option>USD/CHF</option>
-    <option>EUR/JPY</option>
-  </select>
-
-  <br><br>
-
-  <p id="signal" class="wait">WAITING...</p>
-
-  <button onclick="updateSignal()">Get Signal</button>
-
-</div>
+<table>
+  <tr>
+    <th>TIME</th>
+    <th>PAIR</th>
+    <th>EMA</th>
+    <th>RSI</th>
+    <th>MACD</th>
+    <th>ADX</th>
+    <th>CANDLE</th>
+    <th>SIGNAL</th>
+  </tr>
+  <tbody id="rows"></tbody>
+</table>
 
 <script>
-function updateSignal() {
-  const pair = document.getElementById("pair").value;
-  const signals = ["CALL", "PUT", "NO TRADE"];
-  const pick = signals[Math.floor(Math.random() * signals.length)];
+async function load() {
+  const res = await fetch("signal.json?" + Date.now());
+  const data = await res.json();
+  const rows = document.getElementById("rows");
+  rows.innerHTML = "";
 
-  const el = document.getElementById("signal");
-
-  if (pick === "CALL") {
-    el.innerText = "🟢 " + pair + " → CALL";
-    el.className = "call";
-  } else if (pick === "PUT") {
-    el.innerText = "🔴 " + pair + " → PUT";
-    el.className = "put";
-  } else {
-    el.innerText = pair + " → NO TRADE";
-    el.className = "wait";
-  }
+  data.signals.forEach(s => {
+    rows.innerHTML += `
+      <tr>
+        <td>${s.time}</td>
+        <td>${s.pair}</td>
+        <td>${s.ema}</td>
+        <td>${s.rsi}</td>
+        <td>${s.macd}</td>
+        <td>${s.adx}</td>
+        <td>${s.candle}</td>
+        <td class="${s.signal}">${s.signal}</td>
+      </tr>`;
+  });
 }
+
+load();
+setInterval(load, 60000);
 </script>
 
 </body>
 </html>
+
 
