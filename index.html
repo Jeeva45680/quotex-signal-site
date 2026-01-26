@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quotex Signal Dashboard</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      background: #020617;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding-top: 50px;
+    }
+    .box {
+      background: #0f172a;
+      width: 320px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 12px;
+    }
+    .call { color: #22c55e; font-size: 30px; }
+    .put { color: #ef4444; font-size: 30px; }
+    .wait { color: #eab308; font-size: 22px; }
+  </style>
+</head>
+<body>
+
+<h1>📊 Quotex Signal</h1>
+
+<div class="box">
+  <p id="signal" class="wait">WAITING FOR SIGNAL...</p>
+</div>
+
+<br>
+<button onclick="updateSignal()">Refresh</button>
+
+<script>
+function updateSignal() {
+  const signals = ["CALL", "PUT", "NO TRADE"];
+  const pick = signals[Math.floor(Math.random() * signals.length)];
+  const el = document.getElementById("signal");
+
+  if (pick === "CALL") {
+    el.innerText = "🟢 CALL";
+    el.className = "call";
+  } else if (pick === "PUT") {
+    el.innerText = "🔴 PUT";
+    el.className = "put";
+  } else {
+    el.innerText = "⏸ NO TRADE";
+    el.className = "wait";
+  }
+}
+</script>
+
+</body>
+</html>
