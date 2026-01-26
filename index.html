@@ -1,99 +1,90 @@
-import yfinance as yf
-import pandas as pd
-import json
-from datetime import datetime
-import os
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Quotex Signal Dashboard</title>
+  <style>
+    body {
+      background: #020617;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 15px;
+    }
+    h2 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #334155;
+      text-align: center;
+    }
+    th {
+      background: #020617;
+    }
+    .CALL { color: #22c55e; font-weight: bold; }
+    .PUT { color: #ef4444; font-weight: bold; }
+    .NO { color: #eab308; font-weight: bold; }
+  </style>
+</head>
+<body>
 
-# =====================
-# SETTINGS
-# =====================
-ASSETS = {
-    "FOREX": {"EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD"},
-    "CRYPTO": {"BTC-USD": "BTC/USD", "ETH-USD": "ETH/USD"},
-    "STOCKS": {"AAPL": "AAPL", "TSLA": "TSLA"},
-    "COMMODITIES": {"GC=F": "GOLD", "SI=F": "SILVER"},
-    "OTC": {"EUR/USD OTC": "EUR/USD OTC"}  # simulated
+<h2>📊 Quotex Signal Dashboard</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>TIME</th>
+      <th>MARKET</th>
+      <th>PAIR</th>
+      <th>SIGNAL</th>
+      <th>CONFIDENCE</th>
+      <th>WINS</th>
+      <th>LOSSES</th>
+    </tr>
+  </thead>
+  <tbody id="rows">
+    <tr><td colspan="7">Loading signals...</td></tr>
+  </tbody>
+</table>
+
+<script>
+async function loadSignals() {
+  try {
+    const res = await fetch("signal.json?" + Date.now());
+    const data = await res.json();
+
+    const rows = document.getElementById("rows");
+    rows.innerHTML = "";
+
+    data.signals.forEach(s => {
+      rows.innerHTML += `
+        <tr>
+          <td>${s.time}</td>
+          <td>${s.market}</td>
+          <td>${s.pair}</td>
+          <td class="${s.signal.startsWith('NO') ? 'NO' : s.signal}">
+            ${s.signal}
+          </td>
+          <td>${s.confidence ? s.confidence + "%" : "--"}</td>
+          <td>${s.wins}</td>
+          <td>${s.losses}</td>
+        </tr>`;
+    });
+
+  } catch (e) {
+    document.getElementById("rows").innerHTML =
+      "<tr><td colspan='7'>Failed to load signal.json</td></tr>";
+  }
 }
 
-HISTORY_FILE = "history.json"
-SIGNAL_FILE = "signal.json"
+loadSignals();
+setInterval(loadSignals, 60000); // auto refresh every 1 min
+</script>
 
-# =====================
-# INDICATORS
-# =====================
-def ema(s, p): return s.ewm(span=p, adjust=False).mean()
-
-def rsi(s, p=14):
-    d = s.diff()
-    g = d.clip(lower=0)
-    l = -d.clip(upper=0)
-    rs = g.ewm(com=p-1, adjust=False).mean() / l.ewm(com=p-1, adjust=False).mean()
-    return 100 - (100 / (1 + rs))
-
-# =====================
-# LOAD HISTORY
-# =====================
-if os.path.exists(HISTORY_FILE):
-    history = json.load(open(HISTORY_FILE))
-else:
-    history = {}
-
-signals = []
-now = datetime.now().strftime("%H:%M")
-
-# =====================
-# MAIN LOOP (1 signal / min)
-# =====================
-for market, items in ASSETS.items():
-    for symbol, name in items.items():
-
-        if market != "OTC":
-            df = yf.download(symbol, interval="1m", period="1d", progress=False)
-            if len(df) < 20:
-                continue
-            close = df["Close"]
-        else:
-            # OTC simulated candles (strict filtering)
-            close = pd.Series([100,101,102,101,100,99,100,101,102,101,100,99,100])
-
-        df = pd.DataFrame({"close": close})
-        df["EMA5"] = ema(df["close"], 5)
-        df["EMA10"] = ema(df["close"], 10)
-        df["RSI"] = rsi(df["close"])
-
-        last = df.iloc[-1]
-        prev = df.iloc[-2]
-
-        candle_green = last["close"] > prev["close"]
-        candle_red = last["close"] < prev["close"]
-
-        signal = "NO TRADE"
-        confidence = 0
-
-        if last["EMA5"] > last["EMA10"] and 40 <= last["RSI"] <= 65 and candle_green:
-            signal = "CALL"
-            confidence = 68
-        elif last["EMA5"] < last["EMA10"] and 35 <= last["RSI"] <= 60 and candle_red:
-            signal = "PUT"
-            confidence = 66
-
-        # history init
-        history.setdefault(name, {"wins": 0, "losses": 0})
-
-        signals.append({
-            "time": now,
-            "market": market,
-            "pair": name,
-            "signal": signal,
-            "confidence": confidence,
-            "wins": history[name]["wins"],
-            "losses": history[name]["losses"]
-        })
-
-# =====================
-# SAVE FILES
-# =====================
-json.dump({"signals": signals}, open(SIGNAL_FILE, "w"), indent=2)
-json.dump(history, open(HISTORY_FILE, "w"), indent=2)
-
-print("1-minute signals updated")
+</body>
+</html>
