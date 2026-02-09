@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Quotex Signal Dashboard</title>
+
+<style>
+body{
+background:#020617;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+table{
+width:90%;
+margin:auto;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #333;
+padding:12px;
+}
+
+th{
+color:#38bdf8;
+}
+
+.signal-call{color:#00ff00;}
+.signal-put{color:#ff3333;}
+.signal-no{color:yellow;}
+</style>
+</head>
+
+<body>
+
+<h1>📊 Quotex Signal Dashboard</h1>
+
+<table>
+<thead>
+<tr>
+<th>TIME</th>
+<th>PAIR</th>
+<th>SIGNAL</th>
+</tr>
+</thead>
+
+<tbody id="data"></tbody>
+</table>
+
+<script>
+fetch("signal.json")
+.then(r=>r.json())
+.then(d=>{
+document.getElementById("data").innerHTML=`
+<tr>
+<td>${d.time}</td>
+<td>${d.pair}</td>
+<td class="${
+d.signal=="CALL"?"signal-call":
+d.signal=="PUT"?"signal-put":"signal-no"}">
+${d.signal}
+</td>
+</tr>`;
+})
+.catch(()=>alert("signal.json not found"));
+</script>
+
+</body>
+</html>
