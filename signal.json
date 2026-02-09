@@ -1,5 +1,14 @@
 {
-  "time": "--",
-  "pair": "EUR/USD",
-  "signal": "WAIT"
+  "signals": [
+    {
+      "date": "09/02/2026",
+      "time": "15:48",
+      "market": "FOREX",
+      "pair": "EUR/USD",
+      "signal": "WAIT",
+      "confidence": 0,
+      "wins": 0,
+      "losses": 0
+    }
+  ]
 }
