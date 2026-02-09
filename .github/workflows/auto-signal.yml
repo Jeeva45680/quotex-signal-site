@@ -2,45 +2,27 @@ name: Auto Quotex Signal Generator
 
 on:
   schedule:
-    - cron: "*/1 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Generate signal
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Run generator
+        run: python generate_signal.py
+
+      - name: Commit update
         run: |
-          TIME=$(date +"%H:%M")
-          DATE=$(date +"%d/%m/%Y")
-
-          cat > signal.json <<EOF
-          {
-            "signals": [
-              {
-                "date": "$DATE",
-                "time": "$TIME",
-                "market": "FOREX",
-                "pair": "EUR/USD",
-                "signal": "WAIT",
-                "confidence": 0,
-                "wins": 0,
-                "losses": 0
-              }
-            ]
-          }
-          EOF
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
           git add signal.json
-          git commit -m "Auto update signal" || echo "No changes"
+          git commit -m "auto update"
           git push
