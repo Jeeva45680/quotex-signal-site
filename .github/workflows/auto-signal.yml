@@ -2,11 +2,11 @@ name: Auto Quotex Signal Generator
 
 on:
   schedule:
-    - cron: "* * * * *"   # every 1 minute
+    - cron: "* * * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write   # 🔥 REQUIRED to push changes
+  contents: write
 
 jobs:
   generate:
@@ -27,5 +27,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add signal.json
-          git commit -m "auto update" || echo "no changes"
+          git commit -m "auto update" || echo "no change"
           git push
