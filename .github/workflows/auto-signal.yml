@@ -2,8 +2,11 @@ name: Auto Quotex Signal Generator
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/1 * * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   generate:
@@ -11,18 +14,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+
+      - name: Install deps
+        run: pip install pandas requests
 
       - name: Run generator
         run: python generate_signal.py
 
       - name: Commit update
         run: |
-          git config --global user.name github-actions
-          git config --global user.email github-actions@github.com
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git add signal.json
-          git commit -m "auto update"
+          git commit -m "auto update" || echo "nothing to commit"
           git push
