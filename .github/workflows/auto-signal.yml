@@ -2,8 +2,9 @@ name: Auto Quotex Signal Generator
 
 on:
   schedule:
-    - cron: "* * * * *"
+    - cron: "*/5 * * * *"   # every 5 minutes (stable)
   workflow_dispatch:
+
 
 permissions:
   contents: write
