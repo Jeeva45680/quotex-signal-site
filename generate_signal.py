@@ -1,18 +1,16 @@
 import json
 from datetime import datetime
 
-now = datetime.now()
-
 data = {
     "signals": [
         {
-            "date": now.strftime("%d/%m/%Y"),
-            "time": now.strftime("%H:%M"),
+            "date": datetime.now().strftime("%d/%m/%Y"),
+            "time": datetime.now().strftime("%H:%M:%S"),
             "market": "FOREX",
             "pair": "EUR/USD",
-            "signal": "BUY",
-            "confidence": 75,
-            "wins": 1,
+            "signal": "WAIT",
+            "confidence": 0,
+            "wins": 0,
             "losses": 0
         }
     ]
@@ -20,5 +18,3 @@ data = {
 
 with open("signal.json", "w") as f:
     json.dump(data, f, indent=2)
-
-print("Signal updated")
