@@ -1,12 +1,12 @@
 {
   "signals": [
     {
-      "date": "27/03/2026",
-      "time": "23:41:37",
+      "date": "28/03/2026",
+      "time": "00:00:06",
       "market": "FOREX",
       "pair": "EUR/USD",
       "signal": "SELL",
-      "confidence": 74,
+      "confidence": 73,
       "wins": 0,
       "losses": 0
     }
