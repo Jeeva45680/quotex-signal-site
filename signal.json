@@ -2,11 +2,11 @@
   "signals": [
     {
       "date": "13/06/2026",
-      "time": "13:12:25",
+      "time": "15:11:15",
       "market": "FOREX",
       "pair": "EUR/USD",
       "signal": "WAIT",
-      "confidence": 68,
+      "confidence": 78,
       "wins": 0,
       "losses": 0
     }
