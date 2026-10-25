@@ -1,8 +1,8 @@
 {
   "signals": [
     {
-      "date": "24/10/2026",
-      "time": "23:34:34",
+      "date": "25/10/2026",
+      "time": "01:34:35",
       "market": "FOREX",
       "pair": "EUR/USD",
       "signal": "WAIT",
